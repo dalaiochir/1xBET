@@ -1,0 +1,124 @@
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role { USER ADMIN }
+enum MatchStatus { LIVE UPCOMING FINISHED }
+enum PredictionStatus { PENDING WON LOST VOID }
+enum TransactionType { SIGNUP_BONUS PREDICTION_STAKE PREDICTION_PAYOUT DAILY_REWARD ADMIN_ADJUSTMENT }
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  username String @unique
+  passwordHash String
+  role Role @default(USER)
+  demoBalance Int @default(10000)
+  favoriteGame String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  predictions Prediction[]
+  transactions DemoTransaction[]
+}
+
+model Game {
+  id String @id @default(cuid())
+  name String
+  slug String @unique
+  icon String
+  tournaments Tournament[]
+  teams Team[]
+  matches Match[]
+}
+
+model Tournament {
+  id String @id @default(cuid())
+  name String
+  region String
+  gameId String
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  matches Match[]
+}
+
+model Team {
+  id String @id @default(cuid())
+  name String
+  logo String
+  gameId String
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  matchesA Match[] @relation("TeamA")
+  matchesB Match[] @relation("TeamB")
+}
+
+model Match {
+  id String @id @default(cuid())
+  gameId String
+  tournamentId String
+  teamAId String
+  teamBId String
+  startTime DateTime
+  status MatchStatus
+  scoreA Int @default(0)
+  scoreB Int @default(0)
+  format String
+  createdAt DateTime @default(now())
+  game Game @relation(fields: [gameId], references: [id])
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+  teamA Team @relation("TeamA", fields: [teamAId], references: [id])
+  teamB Team @relation("TeamB", fields: [teamBId], references: [id])
+  markets Market[]
+  predictions Prediction[]
+}
+
+model Market {
+  id String @id @default(cuid())
+  matchId String
+  marketType String
+  isLocked Boolean @default(false)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  outcomes Outcome[]
+  predictions Prediction[]
+}
+
+model Outcome {
+  id String @id @default(cuid())
+  marketId String
+  name String
+  multiplier Float
+  isWinner Boolean @default(false)
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  predictions Prediction[]
+}
+
+model Prediction {
+  id String @id @default(cuid())
+  userId String
+  matchId String
+  marketId String
+  outcomeId String
+  stakeAmount Int
+  potentialReturn Int
+  status PredictionStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  settledAt DateTime?
+  user User @relation(fields: [userId], references: [id])
+  match Match @relation(fields: [matchId], references: [id])
+  market Market @relation(fields: [marketId], references: [id])
+  outcome Outcome @relation(fields: [outcomeId], references: [id])
+}
+
+model DemoTransaction {
+  id String @id @default(cuid())
+  userId String
+  type TransactionType
+  amount Int
+  balanceAfter Int
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+}

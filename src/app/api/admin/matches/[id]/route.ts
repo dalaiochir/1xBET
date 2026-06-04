@@ -1,0 +1,3 @@
+import { prisma } from '@/lib/prisma';import { bad, ok } from '@/lib/response';import { requireAdmin } from '@/lib/admin';
+export async function PATCH(req:Request,{params}:{params:Promise<{id:string}>}){try{await requireAdmin();const {id}=await params;const body=await req.json();if(body.startTime)body.startTime=new Date(body.startTime);return ok(await prisma.match.update({where:{id},data:body}))}catch(e:any){return bad(e.message,403)}}
+export async function DELETE(_:Request,{params}:{params:Promise<{id:string}>}){try{await requireAdmin();const {id}=await params;await prisma.match.delete({where:{id}});return ok({deleted:true})}catch(e:any){return bad(e.message,403)}}

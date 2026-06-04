@@ -1,0 +1,2 @@
+import { prisma } from '@/lib/prisma';import { ok } from '@/lib/response';
+export async function GET(){const users=await prisma.user.findMany({select:{username:true,demoBalance:true,predictions:true},orderBy:{demoBalance:'desc'},take:25});return ok(users.map((u,i)=>({rank:i+1,username:u.username,profit:u.demoBalance-10000,totalPredictions:u.predictions.length,winRate:u.predictions.length?Math.round(u.predictions.filter(p=>p.status==='WON').length/u.predictions.length*100):0})))}

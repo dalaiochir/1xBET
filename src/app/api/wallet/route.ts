@@ -1,0 +1,2 @@
+import { getServerSession } from 'next-auth';import { authOptions } from '@/lib/auth';import { prisma } from '@/lib/prisma';import { bad, ok } from '@/lib/response';
+export async function GET(){const s=await getServerSession(authOptions);if(!s?.user)return bad('Login required',401);const userId=(s.user as any).id;const user=await prisma.user.findUnique({where:{id:userId},select:{demoBalance:true,transactions:{orderBy:{createdAt:'desc'},take:50}}});return ok(user)}

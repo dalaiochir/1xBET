@@ -1,0 +1,4 @@
+'use client';
+import { signIn } from 'next-auth/react';
+import { useState } from 'react';
+export default function LoginForm(){const [email,setEmail]=useState('');const [password,setPassword]=useState('');const [error,setError]=useState('');return <form className="form" onSubmit={async e=>{e.preventDefault();const r=await signIn('credentials',{email,password,redirect:false,callbackUrl:'/'});if(r?.ok) location.href='/'; else setError('Invalid email or password');}}><input className="input" value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="Email" required/><input className="input" value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="Password" required/><button className="btn">Login</button>{error&&<p style={{color:'var(--danger)'}}>{error}</p>}<a className="muted" href="/register">Create account</a></form>}
